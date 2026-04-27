@@ -33,9 +33,9 @@ export async function GET(
     // Fetch missions for this trip
     const { data: missions, error: missionsError } = await supabaseAdmin
       .from('Mission')
-      .select('id, title, objective, hint, orderIndex')
+      .select('id, title, objective, hint, order')
       .eq('tripId', trip.id)
-      .order('orderIndex', { ascending: true })
+      .order('order', { ascending: true })
 
     if (missionsError) {
       console.error('Error fetching missions:', missionsError)

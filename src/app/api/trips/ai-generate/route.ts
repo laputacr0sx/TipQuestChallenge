@@ -137,12 +137,12 @@ Format as JSON array:
       missions = getFallbackMissions(destination, topic || '')
     }
 
-    // Insert missions into database (using camelCase column names per Prisma schema)
+    // Insert missions into database (using Prisma schema field name 'order')
     const missionRecords = missions.map((mission, index) => ({
       tripId: tripId,
       title: mission.title,
       objective: mission.objective,
-      orderIndex: index + 1
+      order: index + 1
     }))
 
     const { data: insertedMissions, error: insertError } = await supabaseAdmin
