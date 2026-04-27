@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find C:UsersshngDocumentsDEVTipQuestChallenge -type f -not -path */.git/*)",
+      "WebFetch(domain:lobehub.com)",
+      "Bash(npm search:*)",
+      "Bash(npm view:*)",
+      "Bash(npx:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"chore: add .gitignore with worktrees directory:*)",
+      "Bash(git worktree:*)",
+      "Bash(npm --version)",
+      "Bash(nvm list:*)",
+      "Bash(nvm use:*)",
+      "Bash(export NVM_DIR=\"/c/Users/shng/AppData/Roaming/nvm\")",
+      "Bash(source \"$NVM_DIR/nvm.sh\")"
+    ]
+  },
+  "enabledPlugins": {
+    "git-workflow@netresearch-claude-code-marketplace": true
+  }
+}

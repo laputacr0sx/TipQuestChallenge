@@ -1,0 +1,64 @@
+// This is your Prisma schema file
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Trip - a field trip created by a teacher
+model Trip {
+  id          String    @id @default(uuid())
+  name        String
+  topic       String
+  destination String
+  accessCode  String    @unique // 4-digit code for students to join
+  status      TripStatus @default(pre)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  missions    Mission[]
+  results     Result[]
+}
+
+enum TripStatus {
+  pre     // Pre-trip planning
+  during  // Trip is active
+  post    // Trip completed
+}
+
+// Mission - a learning objective for a trip
+model Mission {
+  id        String   @id @default(uuid())
+  tripId    String
+  title     String
+  objective String   @db.Text // Detailed learning objective
+  hint      String?  @db.Text // Optional hint for students
+  order     Int      // Display order
+  createdAt DateTime @default(now())
+
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  results   Result[]
+}
+
+// Result - a student's submission for a mission
+model Result {
+  id           String   @id @default(uuid())
+  missionId    String
+  studentName  String
+  photoUrl     String?  @db.Text // URL to uploaded photo in Supabase Storage
+  aiFeedback   String?  @db.Text // AI-generated feedback
+  notes        String?  @db.Text // Teacher's optional notes
+  score        Int?     // Optional score (1-5)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  mission      Mission  @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  trip         Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  // Denormalize tripId for easier queries
+  tripId       String
+}
