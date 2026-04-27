@@ -9,7 +9,7 @@ export default function Home() {
           <h1 className="text-4xl font-bold text-amber-600 mb-2">
             ExploraQuest
           </h1>
-          <p className="text-zinc-600 text-lg">
+          <p className="text-gray-700 text-lg font-medium">
             AI-Powered Field Trip Explorer
           </p>
         </div>
@@ -26,10 +26,10 @@ export default function Home() {
                 <span className="text-3xl">🎒</span>
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-zinc-800">
+                <h2 className="text-xl font-semibold text-gray-900">
                   I'm a Student
                 </h2>
-                <p className="text-zinc-500 text-sm">
+                <p className="text-gray-600 text-sm">
                   Join a trip and complete missions!
                 </p>
               </div>
@@ -46,10 +46,10 @@ export default function Home() {
                 <span className="text-3xl">📋</span>
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-zinc-800">
+                <h2 className="text-xl font-semibold text-gray-900">
                   I'm a Teacher
                 </h2>
-                <p className="text-zinc-500 text-sm">
+                <p className="text-gray-600 text-sm">
                   Create trips and review progress
                 </p>
               </div>
@@ -58,7 +58,7 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <p className="text-zinc-400 text-sm text-center mt-4">
+        <p className="text-gray-500 text-sm text-center mt-4">
           Made for Hong Kong Primary Schools
         </p>
       </main>

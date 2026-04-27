@@ -21,6 +21,10 @@ Remember: You are a guide, not a grader. Every submission is a success!`
 // Lazy initialization to avoid build-time errors
 let _openai: OpenAI | null = null
 
+function getOpenAIModel(): string {
+  return process.env.OPENAI_MODEL || 'gpt-4o-mini'
+}
+
 export function getOpenAI(): OpenAI {
   if (!_openai) {
     const apiKey = process.env.OPENAI_API_KEY
@@ -37,6 +41,10 @@ export function getOpenAI(): OpenAI {
     })
   }
   return _openai
+}
+
+export function getModelName(): string {
+  return getOpenAIModel()
 }
 
 // For direct usage in API routes

@@ -74,7 +74,7 @@ export default function JoinTrip() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-zinc-700 mb-2">
+              <label htmlFor="name" className="block text-sm font-semibold text-gray-800 mb-2">
                 Your Name
               </label>
               <input
@@ -83,13 +83,13 @@ export default function JoinTrip() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your name"
-                className="w-full px-4 py-3 rounded-xl border-2 border-amber-200 focus:border-amber-400 focus:outline-none text-lg"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-amber-500 focus:outline-none text-lg text-gray-900 placeholder-gray-400 bg-white"
                 maxLength={30}
               />
             </div>
 
             <div>
-              <label htmlFor="code" className="block text-sm font-medium text-zinc-700 mb-2">
+              <label htmlFor="code" className="block text-sm font-semibold text-gray-800 mb-2">
                 Trip Code (4 digits)
               </label>
               <input
@@ -98,7 +98,7 @@ export default function JoinTrip() {
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
                 placeholder="0000"
-                className="w-full px-4 py-3 rounded-xl border-2 border-amber-200 focus:border-amber-400 focus:outline-none text-lg text-center tracking-widest font-mono"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-amber-500 focus:outline-none text-lg text-center tracking-widest font-mono text-gray-900 placeholder-gray-400 bg-white"
                 maxLength={4}
                 inputMode="numeric"
               />
