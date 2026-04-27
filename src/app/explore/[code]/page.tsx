@@ -60,22 +60,29 @@ export default function ExploreTrip() {
 
   const loadMissions = async (tripId: string) => {
     try {
-      // For now, we'll simulate missions since we don't have a real DB
-      // In production, this would fetch from /api/trips/{code}/missions
-      const mockMissions: Mission[] = [
-        { id: '1', title: 'Find a Tree', objective: 'Look for a tree with interesting bark' },
-        { id: '2', title: 'Spot a Bird', objective: 'Find and photograph any bird' },
-        { id: '3', title: 'Cloud Shapes', objective: 'Find clouds that look like something' },
-        { id: '4', title: 'Color Hunt', objective: 'Find something red, yellow, and blue' },
-        { id: '5', title: 'Texture Search', objective: 'Find something rough and something smooth' },
-      ]
-      setMissions(mockMissions)
+      const res = await fetch(`/api/trips/${code}/missions`);
+      if (!res.ok) {
+        // Fallback to mock if API fails
+        console.warn('Failed to load missions from API, using mock data');
+        const mockMissions: Mission[] = [
+          { id: '1', title: 'Find a Tree', objective: 'Look for a tree with interesting bark' },
+          { id: '2', title: 'Spot a Bird', objective: 'Find and photograph any bird' },
+          { id: '3', title: 'Cloud Shapes', objective: 'Find clouds that look like something' },
+          { id: '4', title: 'Color Hunt', objective: 'Find something red, yellow, and blue' },
+          { id: '5', title: 'Texture Search', objective: 'Find something rough and something smooth' },
+        ]
+        setMissions(mockMissions)
+        return;
+      }
+      const data = await res.json();
+      setMissions(data.missions || []);
     } catch (err) {
-      setError('Failed to load missions')
+      console.error('Failed to load missions:', err);
+      setError('Failed to load missions');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -101,19 +108,25 @@ export default function ExploreTrip() {
       formData.append('studentName', session.studentName)
       formData.append('image', selectedFile)
 
-      // Simulate API call for demo
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      // Mock response
-      const mockFeedback: Submission = {
-        id: Date.now().toString(),
-        photo_url: previewImage!,
-        ai_feedback: `Great job, ${session.studentName}! 🎉 You found something amazing! Can you tell me more about what you discovered? Try looking for another interesting detail nearby!`,
-        timestamp: new Date().toISOString()
+      const res = await fetch('/api/submissions', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to submit')
       }
       
-      setFeedback(mockFeedback)
+      const data = await res.json()
+      setFeedback({
+        id: data.submission.id,
+        photo_url: data.submission.photoUrl || previewImage!,
+        ai_feedback: data.submission.aiFeedback,
+        timestamp: data.submission.createdAt
+      })
     } catch (err) {
+      console.error('Failed to submit:', err)
       setError('Failed to submit. Please try again.')
     } finally {
       setIsSubmitting(false)

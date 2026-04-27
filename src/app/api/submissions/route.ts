@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOpenAI, EXPLORER_SYSTEM_PROMPT } from '@/lib/openai'
+import { getOpenAI, getModelName, EXPLORER_SYSTEM_PROMPT } from '@/lib/openai'
 import { getSupabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
@@ -26,14 +26,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get mission details for context
+    // Get mission details for context (using Supabase table names)
     const { data: mission, error: missionError } = await supabaseAdmin
-      .from('missions')
-      .select('id, title, objective, trip_id')
+      .from('Mission')
+      .select('id, title, objective, tripId')
       .eq('id', missionId)
       .single()
 
     if (missionError || !mission) {
+      console.error('Mission not found:', missionError)
       return NextResponse.json(
         { error: 'Mission not found.' },
         { status: 404 }
@@ -46,36 +47,46 @@ export async function POST(request: NextRequest) {
     const base64Image = buffer.toString('base64')
     const mimeType = imageFile.type || 'image/jpeg'
 
-    // Call OpenAI Vision API
-    const openai = getOpenAI()
-    const visionResponse = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: EXPLORER_SYSTEM_PROMPT },
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: `Mission: ${mission.title}\nObjective: ${mission.objective}\n\n${studentName} has submitted this photo. Give them encouraging feedback about what they found, point out interesting details, and ask a follow-up question to help them observe more!`
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: `data:${mimeType};base64,${base64Image}`
-              }
-            }
-          ]
-        }
-      ],
-      max_tokens: 300
-    })
+    let aiFeedback = ''
 
-    const aiFeedback = visionResponse.choices[0]?.message?.content || 
-      "Great observation! Keep exploring!"
+    // Try AI Vision, fall back to simple message if it fails
+    try {
+      const openai = getOpenAI()
+      const modelName = getModelName()
+      
+      const visionResponse = await openai.chat.completions.create({
+        model: modelName,
+        messages: [
+          { role: 'system', content: EXPLORER_SYSTEM_PROMPT },
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: `Mission: ${mission.title}\nObjective: ${mission.objective}\n\n${studentName} has submitted this photo. Give them encouraging feedback about what they found, point out interesting details, and ask a follow-up question to help them observe more!`
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: `data:${mimeType};base64,${base64Image}`
+                }
+              }
+            ]
+          }
+        ],
+        max_tokens: 300
+      } as any)
+
+      aiFeedback = visionResponse.choices[0]?.message?.content || 
+        "Great observation! Keep exploring!"
+    } catch (aiError) {
+      console.error('AI Vision failed, using fallback:', aiError)
+      aiFeedback = "Wow, that's a great find! 🌟 Can you tell me more about what you discovered? Try looking for another interesting detail nearby!"
+    }
 
     // Upload image to Supabase Storage
-    const fileName = `${mission.trip_id}/${missionId}/${studentName}-${Date.now()}.${mimeType.split('/')[1] || 'jpg'}`
+    const fileExt = mimeType.split('/')[1] || 'jpg'
+    const fileName = `${mission.tripId}/${missionId}/${studentName}-${Date.now()}.${fileExt}`
     
     const { data: uploadData, error: uploadError } = await supabaseAdmin
       .storage
@@ -87,28 +98,28 @@ export async function POST(request: NextRequest) {
 
     if (uploadError) {
       console.error('Error uploading image:', uploadError)
-      return NextResponse.json(
-        { error: 'Failed to upload image. Please try again.' },
-        { status: 500 }
-      )
+      // Continue without image URL if upload fails
     }
 
     // Get public URL
-    const { data: urlData } = supabaseAdmin
-      .storage
-      .from('submissions')
-      .getPublicUrl(fileName)
+    let photoUrl = ''
+    if (uploadData) {
+      const { data: urlData } = supabaseAdmin
+        .storage
+        .from('submissions')
+        .getPublicUrl(fileName)
+      photoUrl = urlData.publicUrl
+    }
 
-    const photoUrl = urlData.publicUrl
-
-    // Save submission to database
+    // Save submission to database (using Supabase table names)
     const { data: submission, error: dbError } = await supabaseAdmin
-      .from('results')
+      .from('Result')
       .insert({
-        mission_id: missionId,
-        student_name: studentName,
-        photo_url: photoUrl,
-        ai_feedback: aiFeedback
+        missionId: missionId,
+        studentName: studentName,
+        photoUrl: photoUrl,
+        aiFeedback: aiFeedback,
+        tripId: mission.tripId
       })
       .select()
       .single()

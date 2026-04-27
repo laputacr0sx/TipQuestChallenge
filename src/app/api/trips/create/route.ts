@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     const accessCode = Math.floor(1000 + Math.random() * 9000).toString()
 
     const { data, error } = await supabaseAdmin
-      .from('Trip')
+      .from('trips')
       .insert({
         name,
         topic: topic || 'General Exploration',
@@ -44,7 +44,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ success: true, trip: data })
+    return NextResponse.json({ 
+      success: true, 
+      trip: {
+        id: data.id,
+        name: data.name,
+        destination: data.destination,
+        topic: data.topic,
+        accessCode: data.access_code,
+        status: data.status
+      }
+    })
   } catch (error) {
     console.error('Error creating trip:', error)
     return NextResponse.json(

@@ -31,8 +31,9 @@ export async function GET(
       )
     }
 
-    // Check if trip is active (during or post phase)
-    if (trip.status === 'pre') {
+    // Allow students to join trips in any status (pre, during, post)
+    // Teacher controls when students should start exploring
+    if (trip.status !== 'during' && trip.status !== 'post' && trip.status !== 'pre') {
       return NextResponse.json(
         { error: 'This trip has not started yet. Please wait for your teacher to begin the exploration!' },
         { status: 400 }

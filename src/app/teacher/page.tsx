@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 interface Trip {
@@ -19,6 +19,51 @@ export default function TeacherDashboard() {
   const [showCreate, setShowCreate] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [generatingTripId, setGeneratingTripId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load trips from Supabase on mount
+  useEffect(() => {
+    loadTrips();
+  }, []);
+
+  const loadTrips = async () => {
+    try {
+      const res = await fetch('/api/trips');
+      if (!res.ok) throw new Error('Failed to load trips');
+      const data = await res.json();
+      console.log('Loaded trips:', data.trips); // Debug
+      setTrips(data.trips || []);
+    } catch (err) {
+      console.error('Failed to load trips:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleStartTrip = async (trip: Trip) => {
+    console.log('Starting trip:', trip); // Debug
+    try {
+      const res = await fetch(`/api/trips/${trip.accessCode}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'during' }),
+      });
+      
+      if (!res.ok) {
+        const errData = await res.json();
+        console.error('Start trip error:', errData);
+        throw new Error(errData.error || 'Failed to start trip');
+      }
+      
+      setTrips(trips.map(t => 
+        t.id === trip.id ? { ...t, status: 'during' } : t
+      ));
+      alert(`Trip "${trip.name}" is now active! Students can join with code: ${trip.accessCode}`);
+    } catch (err) {
+      console.error('Failed to start trip:', err);
+      alert('Failed to start trip. Please try again.');
+    }
+  };
 
   const handleGenerateMissions = async (trip: Trip) => {
     setGeneratingTripId(trip.id);
@@ -257,12 +302,25 @@ export default function TeacherDashboard() {
                         ? "Generating..."
                         : "Generate Missions"}
                     </button>
-                    <button className="flex-1 py-2 bg-green-100 text-green-600 font-semibold rounded-lg hover:bg-green-200 transition-colors">
-                      Start Trip
-                    </button>
-                    <button className="px-4 py-2 border-2 border-zinc-200 text-zinc-600 font-semibold rounded-lg hover:bg-zinc-50">
-                      View Dashboard
-                    </button>
+                    {trip.status === 'pre' && (
+                      <button 
+                        onClick={() => handleStartTrip(trip)}
+                        className="flex-1 py-2 bg-green-100 text-green-600 font-semibold rounded-lg hover:bg-green-200 transition-colors"
+                      >
+                        Start Trip
+                      </button>
+                    )}
+                    {trip.status === 'during' && (
+                      <button className="flex-1 py-2 bg-yellow-100 text-yellow-600 font-semibold rounded-lg">
+                        End Trip
+                      </button>
+                    )}
+                    <Link 
+                      href={`/teacher/${trip.id}`}
+                      className="px-4 py-2 border-2 border-zinc-200 text-zinc-600 font-semibold rounded-lg hover:bg-zinc-50 text-center"
+                    >
+                      Dashboard
+                    </Link>
                   </div>
                 </div>
               ))}
