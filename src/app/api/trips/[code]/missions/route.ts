@@ -18,9 +18,9 @@ export async function GET(
 
     // First, get the trip by access code
     const { data: trip, error: tripError } = await supabaseAdmin
-      .from('trips')
+      .from('Trip')
       .select('id')
-      .eq('access_code', code)
+      .eq('accessCode', code)
       .single()
 
     if (tripError || !trip) {
@@ -33,9 +33,9 @@ export async function GET(
     // Fetch missions for this trip
     const { data: missions, error: missionsError } = await supabaseAdmin
       .from('Mission')
-      .select('id, title, objective, hint, "order"')
+      .select('id, title, objective, hint, orderIndex')
       .eq('tripId', trip.id)
-      .order('order', { ascending: true })
+      .order('orderIndex', { ascending: true })
 
     if (missionsError) {
       console.error('Error fetching missions:', missionsError)

@@ -34,8 +34,8 @@ export async function PATCH(
     if (isUUID) {
       // If it's a UUID, look up by ID directly
       const { data, error } = await supabaseAdmin
-        .from('trips')
-        .select('id, name, access_code')
+        .from('Trip')
+        .select('id, name, accessCode')
         .eq('id', code)
         .single()
       
@@ -49,9 +49,9 @@ export async function PATCH(
     } else {
       // Otherwise look up by access code
       const { data, error } = await supabaseAdmin
-        .from('trips')
-        .select('id, name, access_code')
-        .eq('access_code', code)
+        .from('Trip')
+        .select('id, name, accessCode')
+        .eq('accessCode', code)
         .single()
       
       if (error || !data) {
@@ -64,8 +64,8 @@ export async function PATCH(
     }
 
     const { data: updatedTrip, error } = await supabaseAdmin
-      .from('trips')
-      .update({ status, updated_at: new Date().toISOString() })
+      .from('Trip')
+      .update({ status, updatedAt: new Date().toISOString() })
       .eq('id', trip.id)
       .select()
       .single()
@@ -84,7 +84,7 @@ export async function PATCH(
         id: updatedTrip.id,
         name: updatedTrip.name,
         status: updatedTrip.status,
-        accessCode: updatedTrip.access_code,
+        accessCode: updatedTrip.accessCode,
       }
     })
   } catch (error) {

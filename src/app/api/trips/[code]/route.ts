@@ -19,9 +19,9 @@ export async function GET(
     // Look up trip by access code
     const supabase = getSupabase()
     const { data: trip, error } = await supabase
-      .from('trips')
+      .from('Trip')
       .select('id, name, topic, status')
-      .eq('access_code', code)
+      .eq('accessCode', code)
       .single()
 
     if (error || !trip) {

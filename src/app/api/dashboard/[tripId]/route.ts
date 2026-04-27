@@ -19,7 +19,7 @@ export async function GET(
 
     // Get trip details
     const { data: trip, error: tripError } = await supabase
-      .from('trips')
+      .from('Trip')
       .select('id, name, topic, status')
       .eq('id', tripId)
       .single()
@@ -33,10 +33,10 @@ export async function GET(
 
     // Get all missions for this trip
     const { data: missions, error: missionsError } = await supabase
-      .from('missions')
+      .from('Mission')
       .select('id, title, objective')
-      .eq('trip_id', tripId)
-      .order('created_at', { ascending: true })
+      .eq('tripId', tripId)
+      .order('createdAt', { ascending: true })
 
     if (missionsError) {
       console.error('Error fetching missions:', missionsError)
@@ -48,21 +48,21 @@ export async function GET(
 
     // Get all submissions with mission details
     const { data: submissions, error: submissionsError } = await supabase
-      .from('results')
+      .from('Result')
       .select(`
         id,
-        student_name,
-        photo_url,
-        ai_feedback,
-        timestamp,
-        mission_id,
-        missions (
+        studentName,
+        photoUrl,
+        aiFeedback,
+        createdAt,
+        missionId,
+        Mission (
           title,
           objective
         )
       `)
-      .in('mission_id', missions.map(m => m.id))
-      .order('timestamp', { ascending: false })
+      .in('missionId', missions.map(m => m.id))
+      .order('createdAt', { ascending: false })
 
     if (submissionsError) {
       console.error('Error fetching submissions:', submissionsError)
@@ -75,9 +75,9 @@ export async function GET(
     // Organize data: submissions grouped by mission
     const missionStats = missions.map(mission => {
       const missionSubmissions = submissions.filter(
-        s => s.mission_id === mission.id
+        s => s.missionId === mission.id
       )
-      const uniqueStudents = new Set(missionSubmissions.map(s => s.student_name))
+      const uniqueStudents = new Set(missionSubmissions.map(s => s.studentName))
       
       return {
         ...mission,
@@ -89,7 +89,7 @@ export async function GET(
 
     // Calculate overall stats
     const totalSubmissions = submissions.length
-    const uniqueStudentsAll = new Set(submissions.map(s => s.student_name)).size
+    const uniqueStudentsAll = new Set(submissions.map(s => s.studentName)).size
 
     return NextResponse.json({
       trip,

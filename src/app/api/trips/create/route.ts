@@ -25,12 +25,12 @@ export async function POST(request: NextRequest) {
     const accessCode = Math.floor(1000 + Math.random() * 9000).toString()
 
     const { data, error } = await supabaseAdmin
-      .from('trips')
+      .from('Trip')
       .insert({
         name,
         topic: topic || 'General Exploration',
         destination,
-        accessCode,
+        accessCode: accessCode,
         status: 'pre'
       })
       .select()
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
         name: data.name,
         destination: data.destination,
         topic: data.topic,
-        accessCode: data.access_code,
+        accessCode: data.accessCode,
         status: data.status
       }
     })

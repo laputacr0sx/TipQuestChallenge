@@ -11,21 +11,21 @@ export async function GET() {
       )
     }
 
-    // Fetch all trips with mission and student counts
+    // Fetch all Trip with mission and student counts
     const { data: trips, error } = await supabaseAdmin
-      .from('trips')
+      .from('Trip')
       .select(`
         id,
         name,
-        access_code,
+        accessCode,
         destination,
         topic,
         status,
-        created_at,
-        missions (id),
-        results (id)
+        createdAt,
+        Mission (id),
+        Result (id)
       `)
-      .order('created_at', { ascending: false })
+      .order('createdAt', { ascending: false })
 
     if (error) {
       console.error('Error fetching trips:', error)
@@ -39,12 +39,12 @@ export async function GET() {
     const formattedTrips = (trips || []).map((trip: any) => ({
       id: trip.id,
       name: trip.name,
-      accessCode: trip.access_code,
+      accessCode: trip.accessCode,
       destination: trip.destination,
       topic: trip.topic,
       status: trip.status,
       missionCount: trip.missions?.length || 0,
-      studentCount: new Set(trip.results?.map((r: any) => r.student_name) || []).size,
+      studentCount: new Set(trip.results?.map((r: any) => r.studentName) || []).size,
     }))
 
     return NextResponse.json({ trips: formattedTrips })
