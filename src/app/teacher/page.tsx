@@ -20,6 +20,7 @@ export default function TeacherDashboard() {
   const [isCreating, setIsCreating] = useState(false);
   const [generatingTripId, setGeneratingTripId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Load trips from Supabase on mount
   useEffect(() => {
@@ -28,20 +29,20 @@ export default function TeacherDashboard() {
 
   const loadTrips = async () => {
     try {
+      setError(null);
       const res = await fetch('/api/trips');
       if (!res.ok) throw new Error('Failed to load trips');
       const data = await res.json();
-      console.log('Loaded trips:', data.trips); // Debug
       setTrips(data.trips || []);
     } catch (err) {
       console.error('Failed to load trips:', err);
+      setError('Failed to load trips. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleStartTrip = async (trip: Trip) => {
-    console.log('Starting trip:', trip); // Debug
     try {
       const res = await fetch(`/api/trips/${trip.accessCode}/status`, {
         method: 'PATCH',
@@ -65,6 +66,33 @@ export default function TeacherDashboard() {
     }
   };
 
+  const handleEndTrip = async (trip: Trip) => {
+    if (!confirm(`Are you sure you want to end trip "${trip.name}"? This will prevent new students from joining.`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/trips/${trip.accessCode}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'post' }),
+      });
+      
+      if (!res.ok) {
+        const errData = await res.json();
+        console.error('End trip error:', errData);
+        throw new Error(errData.error || 'Failed to end trip');
+      }
+      
+      setTrips(trips.map(t => 
+        t.id === trip.id ? { ...t, status: 'post' } : t
+      ));
+      alert(`Trip "${trip.name}" has been ended.`);
+    } catch (err) {
+      console.error('Failed to end trip:', err);
+      alert('Failed to end trip. Please try again.');
+    }
+  };
+
   const handleGenerateMissions = async (trip: Trip) => {
     setGeneratingTripId(trip.id);
     try {
@@ -81,7 +109,6 @@ export default function TeacherDashboard() {
       if (!res.ok) throw new Error("Failed to generate missions");
 
       const data = await res.json();
-      console.log("Generated missions:", data.missions);
       alert(`Successfully generated ${data.missions.length} missions!`);
 
       // Update mission count
@@ -156,6 +183,19 @@ export default function TeacherDashboard() {
 
       <main className="flex-1 p-4 overflow-auto">
         <div className="max-w-4xl mx-auto">
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4">
+              {error}
+              <button 
+                onClick={() => setError(null)} 
+                className="ml-4 text-red-500 hover:text-red-700 underline"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
           {/* Create New Trip Button */}
           <button
             onClick={() => setShowCreate(!showCreate)}
@@ -311,7 +351,10 @@ export default function TeacherDashboard() {
                       </button>
                     )}
                     {trip.status === 'during' && (
-                      <button className="flex-1 py-2 bg-yellow-100 text-yellow-600 font-semibold rounded-lg">
+                      <button 
+                        onClick={() => handleEndTrip(trip)}
+                        className="flex-1 py-2 bg-yellow-100 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-200 transition-colors"
+                      >
                         End Trip
                       </button>
                     )}

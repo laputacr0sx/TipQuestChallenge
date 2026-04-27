@@ -48,14 +48,19 @@ export default function ExploreTrip() {
       return
     }
     
-    const sessionData = JSON.parse(stored)
-    if (sessionData.tripCode !== code) {
+    try {
+      const sessionData = JSON.parse(stored)
+      if (sessionData.tripCode !== code) {
+        router.push('/join')
+        return
+      }
+      
+      setSession(sessionData)
+      loadMissions(sessionData.tripId)
+    } catch (err) {
+      console.error('Failed to parse session data:', err)
       router.push('/join')
-      return
     }
-    
-    setSession(sessionData)
-    loadMissions(sessionData.tripId)
   }, [code, router])
 
   const loadMissions = async (tripId: string) => {
@@ -121,7 +126,7 @@ export default function ExploreTrip() {
       const data = await res.json()
       setFeedback({
         id: data.submission.id,
-        photo_url: data.submission.photoUrl || previewImage!,
+        photo_url: previewImage || data.submission.photoUrl || '',
         ai_feedback: data.submission.aiFeedback,
         timestamp: data.submission.createdAt
       })
@@ -248,6 +253,7 @@ export default function ExploreTrip() {
                 capture="environment"
                 onChange={handleFileSelect}
                 className="hidden"
+                aria-label="Upload photo for mission"
               />
             </div>
 

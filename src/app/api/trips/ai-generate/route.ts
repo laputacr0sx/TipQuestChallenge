@@ -100,8 +100,6 @@ Format as JSON array:
     try {
       const openai = getOpenAI()
       const modelName = getModelName()
-      console.log('Calling AI with model:', modelName)
-      
       const completion = await withTimeout(
         openai.chat.completions.create({
           model: modelName,
@@ -122,7 +120,6 @@ Format as JSON array:
           const parsed = JSON.parse(cleanContent) as { missions?: { title: string; objective: string }[] } | { title: string; objective: string }[]
           missions = Array.isArray(parsed) ? parsed : parsed.missions || []
           aiSucceeded = true
-          console.log('AI generated missions:', missions.length)
         } catch (parseError) {
           console.error('Failed to parse AI response:', parseError)
         }
@@ -133,7 +130,6 @@ Format as JSON array:
 
     // Use fallback if AI failed
     if (!aiSucceeded || missions.length === 0) {
-      console.log('Using fallback missions for:', destination)
       missions = getFallbackMissions(destination, topic || '')
     }
 
@@ -166,9 +162,8 @@ Format as JSON array:
     })
   } catch (error) {
     console.error('Error generating missions:', error)
-    const errorMessage = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
-      { error: 'Something went wrong: ' + errorMessage },
+      { error: 'Failed to generate missions. Please try again.' },
       { status: 500 }
     )
   }

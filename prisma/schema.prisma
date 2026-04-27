@@ -48,6 +48,7 @@ model Mission {
 model Result {
   id           String   @id @default(uuid())
   missionId    String
+  tripId       String   // Denormalized for easier queries (synced via application logic)
   studentName  String
   photoUrl     String?  @db.Text // URL to uploaded photo in Supabase Storage
   aiFeedback   String?  @db.Text // AI-generated feedback
@@ -59,6 +60,7 @@ model Result {
   mission      Mission  @relation(fields: [missionId], references: [id], onDelete: Cascade)
   trip         Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
-  // Denormalize tripId for easier queries
-  tripId       String
+  // Index for efficient queries by trip
+  @@index([tripId])
+  @@index([missionId])
 }

@@ -35,16 +35,16 @@ export async function GET() {
       )
     }
 
-    // Format the response
+    // Format the response - include accessCode for authenticated teacher dashboard
     const formattedTrips = (trips || []).map((trip: any) => ({
       id: trip.id,
       name: trip.name,
-      accessCode: trip.accessCode,
+      accessCode: trip.accessCode, // Needed for teacher to manage trips
       destination: trip.destination,
       topic: trip.topic,
       status: trip.status,
-      missionCount: trip.missions?.length || 0,
-      studentCount: new Set(trip.results?.map((r: any) => r.studentName) || []).size,
+      missionCount: trip.Mission?.length || 0,
+      studentCount: new Set(trip.Result?.map((r: any) => r.studentName) || []).size,
     }))
 
     return NextResponse.json({ trips: formattedTrips })

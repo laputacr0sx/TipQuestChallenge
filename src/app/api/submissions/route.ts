@@ -18,6 +18,34 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // File size validation (max 5MB)
+    const MAX_FILE_SIZE = 5 * 1024 * 1024
+    if (imageFile.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: 'Image file is too large. Maximum size is 5MB.' },
+        { status: 400 }
+      )
+    }
+
+    // File type validation
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    const mimeType = (imageFile.type || 'image/jpeg').toLowerCase()
+    if (!allowedTypes.includes(mimeType)) {
+      return NextResponse.json(
+        { error: 'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.' },
+        { status: 400 }
+      )
+    }
+
+    // Input sanitization - trim and limit length
+    const sanitizedStudentName = studentName.trim().slice(0, 100)
+    if (!sanitizedStudentName) {
+      return NextResponse.json(
+        { error: 'Student name is required.' },
+        { status: 400 }
+      )
+    }
+
     const supabaseAdmin = getSupabaseAdmin()
     if (!supabaseAdmin) {
       return NextResponse.json(
@@ -45,7 +73,6 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await imageFile.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
     const base64Image = buffer.toString('base64')
-    const mimeType = imageFile.type || 'image/jpeg'
 
     let aiFeedback = ''
 
@@ -63,7 +90,7 @@ export async function POST(request: NextRequest) {
             content: [
               {
                 type: 'text',
-                text: `Mission: ${mission.title}\nObjective: ${mission.objective}\n\n${studentName} has submitted this photo. Give them encouraging feedback about what they found, point out interesting details, and ask a follow-up question to help them observe more!`
+                text: `Mission: ${mission.title}\nObjective: ${mission.objective}\n\n${sanitizedStudentName} has submitted this photo. Give them encouraging feedback about what they found, point out interesting details, and ask a follow-up question to help them observe more!`
               },
               {
                 type: 'image_url',
@@ -86,7 +113,7 @@ export async function POST(request: NextRequest) {
 
     // Upload image to Supabase Storage
     const fileExt = mimeType.split('/')[1] || 'jpg'
-    const fileName = `${mission.tripId}/${missionId}/${studentName}-${Date.now()}.${fileExt}`
+    const fileName = `${mission.tripId}/${missionId}/${sanitizedStudentName}-${Date.now()}.${fileExt}`
     
     const { data: uploadData, error: uploadError } = await supabaseAdmin
       .storage
@@ -116,7 +143,7 @@ export async function POST(request: NextRequest) {
       .from('Result')
       .insert({
         missionId: missionId,
-        studentName: studentName,
+        studentName: sanitizedStudentName,
         photoUrl: photoUrl,
         aiFeedback: aiFeedback,
         tripId: mission.tripId

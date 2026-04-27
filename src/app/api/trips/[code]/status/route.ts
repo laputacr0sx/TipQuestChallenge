@@ -28,7 +28,8 @@ export async function PATCH(
     }
 
     // Check if code is a UUID (trip ID) or 4-digit access code
-    const isUUID = code.includes('-') && code.length === 36
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    const isUUID = UUID_REGEX.test(code)
     
     let trip;
     if (isUUID) {
