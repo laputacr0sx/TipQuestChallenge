@@ -7,9 +7,6 @@ export default defineConfig({
     globals: false,
     include: ['src/test/**/*.test.ts'],
     exclude: ['node_modules', '.next', 'dist'],
-    typecheck: {
-      ts: false,
-    },
   },
   resolve: {
     alias: {
